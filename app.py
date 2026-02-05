@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 
 app = Flask(__name__)
+app.secret_key = "secret123"   # session key
+
 
 # ---------- DATABASE ----------
 def get_db():
@@ -11,6 +13,8 @@ def get_db():
 
 def init_db():
     conn = get_db()
+
+    # students table
     conn.execute("""
         CREATE TABLE IF NOT EXISTS students (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,19 +24,65 @@ def init_db():
             phone TEXT
         )
     """)
+
+    # admin table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS admin (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            password TEXT
+        )
+    """)
+
+    # default admin insert (only once)
+    admin = conn.execute("SELECT * FROM admin").fetchone()
+    if not admin:
+        conn.execute(
+            "INSERT INTO admin (username, password) VALUES (?, ?)",
+            ("admin", "1234")
+        )
+
     conn.commit()
     conn.close()
+
 
 init_db()
 
 # ---------- ROUTES ----------
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = get_db()
+        admin = conn.execute(
+            "SELECT * FROM admin WHERE username=? AND password=?",
+            (username, password)
+        ).fetchone()
+        conn.close()
+
+        if admin:
+            session["admin"] = username
+            return redirect(url_for("dashboard"))
+        else:
+            return render_template("login.html", error="Invalid credentials")
+
     return render_template("login.html")
+
 
 @app.route("/dashboard")
 def dashboard():
+    if "admin" not in session:
+        return redirect(url_for("login"))
     return render_template("dashboard.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("admin", None)
+    return redirect(url_for("login"))
+
 
 @app.route("/add-student", methods=["GET", "POST"])
 def add_student():
