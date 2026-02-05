@@ -69,6 +69,32 @@ def delete_student(id):
     conn.close()
     return redirect(url_for("students"))
 
+@app.route("/edit-student/<int:id>", methods=["GET", "POST"])
+def edit_student(id):
+    conn = get_db()
+
+    if request.method == "POST":
+        name = request.form["name"]
+        roll = request.form["roll"]
+        class_name = request.form["class_name"]
+        phone = request.form["phone"]
+
+        conn.execute("""
+            UPDATE students
+            SET name=?, roll=?, class_name=?, phone=?
+            WHERE id=?
+        """, (name, roll, class_name, phone, id))
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for("students"))
+
+    student = conn.execute(
+        "SELECT * FROM students WHERE id = ?", (id,)
+    ).fetchone()
+    conn.close()
+
+    return render_template("edit_student.html", student=student)
 
 # ---------- RUN ----------
 if __name__ == "__main__":

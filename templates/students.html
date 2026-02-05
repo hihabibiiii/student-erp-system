@@ -25,12 +25,14 @@
     <td>{{ s.roll }}</td>
     <td>{{ s.class_name }}</td>
     <td>{{ s.phone }}</td>
-    <td>
-      <a href="/delete-student/{{ s.id }}"
-         onclick="return confirm('Are you sure?')">
-         ❌ Delete
-      </a>
-    </td>
+   <td class="editAndDelBtn">
+  <a href="/edit-student/{{ s.id }}">✏️ Edit</a> |
+  <a href="/delete-student/{{ s.id }}"
+     onclick="return confirm('Are you sure?')">
+     ❌ Delete
+  </a>
+</td>
+  
   </tr>
   {% endfor %}
 </table>
