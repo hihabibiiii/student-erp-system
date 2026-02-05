@@ -26,6 +26,7 @@ def get_db():
 def init_db():
     conn = get_db()
 
+    # ---------- STUDENTS ----------
     conn.execute("""
         CREATE TABLE IF NOT EXISTS students (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,6 +39,7 @@ def init_db():
         )
     """)
 
+    # ---------- FEE PAYMENTS ----------
     conn.execute("""
         CREATE TABLE IF NOT EXISTS fee_payments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,6 +50,7 @@ def init_db():
         )
     """)
 
+    # ---------- ADMIN ----------
     conn.execute("""
         CREATE TABLE IF NOT EXISTS admin (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,16 +59,25 @@ def init_db():
         )
     """)
 
+    # 🔐 ADD security_answer COLUMN IF MISSING
+    cols = [c[1] for c in conn.execute("PRAGMA table_info(admin)").fetchall()]
+    if "security_answer" not in cols:
+        conn.execute("ALTER TABLE admin ADD COLUMN security_answer TEXT")
+
+    # ---------- DEFAULT ADMIN ----------
     admin = conn.execute("SELECT * FROM admin").fetchone()
     if not admin:
-        hashed = generate_password_hash("1234")
+        hashed_pass = generate_password_hash("1234")
+        hashed_ans = generate_password_hash("petname")
+
         conn.execute(
-            "INSERT INTO admin (username, password) VALUES (?, ?)",
-            ("admin", hashed)
+            "INSERT INTO admin (username, password, security_answer) VALUES (?, ?, ?)",
+            ("admin", hashed_pass, hashed_ans)
         )
 
     conn.commit()
     conn.close()
+
 
 init_db()
 
@@ -99,6 +111,36 @@ def login():
         return render_template("login.html", error="Invalid credentials")
 
     return render_template("login.html")
+
+@app.route("/forgot", methods=["GET", "POST"])
+def forgot():
+    error = None
+    success = None
+
+    if request.method == "POST":
+        answer = request.form["answer"]
+        new_username = request.form["new_username"]
+        new_password = request.form["new_password"]
+
+        conn = get_db()
+        admin = conn.execute("SELECT * FROM admin").fetchone()
+
+        if not check_password_hash(admin["security_answer"], answer):
+            error = "Security answer is incorrect"
+        else:
+            hashed_pass = generate_password_hash(new_password)
+            conn.execute("""
+                UPDATE admin
+                SET username=?, password=?
+                WHERE id=?
+            """, (new_username, hashed_pass, admin["id"]))
+            conn.commit()
+            success = "Username & Password reset successfully"
+
+        conn.close()
+
+    return render_template("forgot.html", error=error, success=success)
+
 
 @app.route("/logout")
 def logout():
@@ -197,6 +239,50 @@ def change_username():
 
     return render_template(
         "change_username.html",
+        error=error,
+        success=success
+    )
+
+@app.route("/change-security-answer", methods=["GET", "POST"])
+@login_required
+def change_security_answer():
+    error = None
+    success = None
+
+    if request.method == "POST":
+        old_answer = request.form["old_answer"]
+        new_answer = request.form["new_answer"]
+        confirm_answer = request.form["confirm_answer"]
+
+        conn = get_db()
+        admin = conn.execute(
+            "SELECT * FROM admin WHERE username=?",
+            (session["admin"],)
+        ).fetchone()
+
+        # OLD ANSWER VERIFY
+        if not check_password_hash(admin["security_answer"], old_answer):
+            error = "Old security answer is incorrect"
+
+        elif new_answer != confirm_answer:
+            error = "Security answers do not match"
+
+        elif len(new_answer) < 3:
+            error = "Security answer must be at least 3 characters"
+
+        else:
+            hashed = generate_password_hash(new_answer)
+            conn.execute(
+                "UPDATE admin SET security_answer=? WHERE id=?",
+                (hashed, admin["id"])
+            )
+            conn.commit()
+            success = "Security answer updated successfully"
+
+        conn.close()
+
+    return render_template(
+        "change_security_answer.html",
         error=error,
         success=success
     )

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Change Security Answer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "navbar.html" %}
+
+<div class="center">
+  <div class="card">
+    <h2>Change Security Answer</h2>
+
+    {% if error %}
+      <p style="color:red; font-weight:bold;">{{ error }}</p>
+    {% endif %}
+
+    {% if success %}
+      <p style="color:green; font-weight:bold;">{{ success }}</p>
+    {% endif %}
+
+    <form method="POST">
+      <input type="password"
+             name="old_answer"
+             placeholder="Old Security Answer"
+             required>
+
+      <input type="password"
+             name="new_answer"
+             placeholder="New Security Answer"
+             required>
+
+      <input type="password"
+             name="confirm_answer"
+             placeholder="Confirm New Security Answer"
+             required>
+
+      <button type="submit">Update Security Answer</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
