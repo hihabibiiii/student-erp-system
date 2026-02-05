@@ -157,15 +157,25 @@ def add_student():
 @login_required
 def students():
     selected_class = request.args.get("class")
+
     conn = get_db()
 
+    # 🔹 CLASS FILTER + DUE SORT
     if selected_class and selected_class != "all":
-        students = conn.execute(
-            "SELECT * FROM students WHERE class_name=?",
-            (selected_class,)
-        ).fetchall()
+        students = conn.execute("""
+            SELECT *,
+            (total_fee - paid_fee) AS due_amount
+            FROM students
+            WHERE class_name=?
+            ORDER BY due_amount DESC
+        """, (selected_class,)).fetchall()
     else:
-        students = conn.execute("SELECT * FROM students").fetchall()
+        students = conn.execute("""
+            SELECT *,
+            (total_fee - paid_fee) AS due_amount
+            FROM students
+            ORDER BY due_amount DESC
+        """).fetchall()
 
     conn.close()
 
