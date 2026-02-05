@@ -20,13 +20,16 @@ def init_db():
     conn = get_db()
 
     # students table
+    
     conn.execute("""
         CREATE TABLE IF NOT EXISTS students (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             roll TEXT,
             class_name TEXT,
-            phone TEXT
+            phone TEXT,
+            total_fee INTEGER,
+            paid_fee INTEGER
         )
     """)
 
@@ -99,12 +102,16 @@ def add_student():
         roll = request.form["roll"]
         class_name = request.form["class_name"]
         phone = request.form["phone"]
+        total_fee = int(request.form["total_fee"])
+        paid_fee = int(request.form["paid_fee"])
 
         conn = get_db()
-        conn.execute(
-            "INSERT INTO students (name, roll, class_name, phone) VALUES (?, ?, ?, ?)",
-            (name, roll, class_name, phone)
-        )
+        conn.execute("""
+            INSERT INTO students
+            (name, roll, class_name, phone, total_fee, paid_fee)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (name, roll, class_name, phone, total_fee, paid_fee))
+
         conn.commit()
         conn.close()
 
@@ -157,12 +164,14 @@ def edit_student(id):
         roll = request.form["roll"]
         class_name = request.form["class_name"]
         phone = request.form["phone"]
+        total_fee = int(request.form["total_fee"])
+        paid_fee = int(request.form["paid_fee"])
 
         conn.execute("""
             UPDATE students
-            SET name=?, roll=?, class_name=?, phone=?
+            SET name=?, roll=?, class_name=?, phone=?, total_fee=?, paid_fee=?
             WHERE id=?
-        """, (name, roll, class_name, phone, id))
+        """, (name, roll, class_name, phone, total_fee, paid_fee, id))
 
         conn.commit()
         conn.close()
@@ -173,7 +182,46 @@ def edit_student(id):
     ).fetchone()
     conn.close()
 
-    return render_template("edit_student.html", student=student)
+    return render_template(
+        "edit_student.html",
+        student=student,
+        classes=CLASSES
+    )
+
+@app.route("/pay-fee/<int:id>", methods=["GET", "POST"])
+def pay_fee(id):
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+
+    if request.method == "POST":
+        amount = int(request.form["amount"])
+
+        # current paid fee
+        student = conn.execute(
+            "SELECT paid_fee FROM students WHERE id=?",
+            (id,)
+        ).fetchone()
+
+        new_paid = student["paid_fee"] + amount
+
+        conn.execute(
+            "UPDATE students SET paid_fee=? WHERE id=?",
+            (new_paid, id)
+        )
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for("students"))
+
+    student = conn.execute(
+        "SELECT * FROM students WHERE id=?",
+        (id,)
+    ).fetchone()
+
+    conn.close()
+    return render_template("pay_fee.html", student=student)
 
 # ---------- RUN ----------
 if __name__ == "__main__":

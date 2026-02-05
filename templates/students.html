@@ -31,6 +31,11 @@
     <th>Class</th>
     <th>Phone</th>
     <th>Action</th>
+    <th>Total Fee</th>
+<th>Paid</th>
+<th>Due</th>
+<th>Status</th>
+
   </tr>
 
   {% for s in students %}
@@ -40,8 +45,22 @@
     <td>{{ s.roll }}</td>
     <td>{{ s.class_name }}</td>
     <td>{{ s.phone }}</td>
+    <td>{{ s.total_fee }}</td>
+<td>{{ s.paid_fee }}</td>
+<td>{{ s.total_fee - s.paid_fee }}</td>
+<td>
+  {% if s.paid_fee >= s.total_fee %}
+    <span style="color:green;font-weight:bold;">Paid</span>
+  {% else %}
+    <span style="color:red;font-weight:bold;">Due</span>
+  {% endif %}
+</td>
+
     <td>
       <a href="/edit-student/{{ s.id }}">✏️ Edit</a> |
+      {% if s.paid_fee < s.total_fee %}
+    <a href="/pay-fee/{{ s.id }}" style="color:green;">💸 Pay Due</a> |
+  {% endif %}
       <a href="/delete-student/{{ s.id }}"
          onclick="return confirm('Are you sure?')">❌ Delete</a>
     </td>

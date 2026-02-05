@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pay Fee</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "navbar.html" %}
+
+<div class="center">
+  <div class="card">
+    <h2>Pay Fee</h2>
+
+    <p><b>Name:</b> {{ student.name }}</p>
+    <p><b>Total Fee:</b> {{ student.total_fee }}</p>
+    <p><b>Paid:</b> {{ student.paid_fee }}</p>
+    <p><b>Due:</b> {{ student.total_fee - student.paid_fee }}</p>
+
+    <form method="POST">
+      <input type="number" name="amount"
+             placeholder="Enter amount to pay"
+             max="{{ student.total_fee - student.paid_fee }}"
+             required>
+
+      <button type="submit">Pay Now</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
