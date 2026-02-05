@@ -5,8 +5,23 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
+  {% include "navbar.html" %}
 <h2 class="title">Student List</h2>
+<form method="GET" style="text-align:center; margin-bottom:20px;">
+  <label><b>Select Class:</b></label>
+
+  <select name="class" onchange="this.form.submit()">
+    <option value="all">All Classes</option>
+
+    {% for c in classes %}
+      <option value="{{ c }}"
+        {% if selected_class == c %}selected{% endif %}>
+        {{ c }}
+      </option>
+    {% endfor %}
+  </select>
+</form>
+
 
 <table>
   <tr>
@@ -25,17 +40,15 @@
     <td>{{ s.roll }}</td>
     <td>{{ s.class_name }}</td>
     <td>{{ s.phone }}</td>
-   <td class="editAndDelBtn">
-  <a href="/edit-student/{{ s.id }}">✏️ Edit</a> |
-  <a href="/delete-student/{{ s.id }}"
-     onclick="return confirm('Are you sure?')">
-     ❌ Delete
-  </a>
-</td>
-  
+    <td>
+      <a href="/edit-student/{{ s.id }}">✏️ Edit</a> |
+      <a href="/delete-student/{{ s.id }}"
+         onclick="return confirm('Are you sure?')">❌ Delete</a>
+    </td>
   </tr>
   {% endfor %}
 </table>
+
 
 </body>
 </html>

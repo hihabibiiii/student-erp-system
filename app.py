@@ -1,6 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 
+CLASSES = [
+    "1st", "2nd", "3rd", "4th", "5th",
+    "6th", "7th", "8th", "9th", "10th"
+]
+
 app = Flask(__name__)
 app.secret_key = "secret123"   # session key
 
@@ -86,10 +91,13 @@ def logout():
 
 @app.route("/add-student", methods=["GET", "POST"])
 def add_student():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
     if request.method == "POST":
         name = request.form["name"]
         roll = request.form["roll"]
-        class_name = request.form["class"]
+        class_name = request.form["class_name"]
         phone = request.form["phone"]
 
         conn = get_db()
@@ -102,14 +110,35 @@ def add_student():
 
         return redirect(url_for("students"))
 
-    return render_template("add_student.html")
+    return render_template("add_student.html", classes=CLASSES)
+
 
 @app.route("/students")
 def students():
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    selected_class = request.args.get("class")
+
     conn = get_db()
-    data = conn.execute("SELECT * FROM students").fetchall()
+
+    if selected_class and selected_class != "all":
+        students = conn.execute(
+            "SELECT * FROM students WHERE class_name = ?",
+            (selected_class,)
+        ).fetchall()
+    else:
+        students = conn.execute("SELECT * FROM students").fetchall()
+
     conn.close()
-    return render_template("students.html", students=data)
+
+    return render_template(
+        "students.html",
+        students=students,
+        classes=CLASSES,
+        selected_class=selected_class
+    )
+
 
 @app.route("/delete-student/<int:id>")
 def delete_student(id):
