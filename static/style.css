@@ -1,74 +1,17 @@
+/* ===== STEP 1: BASIC RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
 body {
-  font-family: Arial;
-  background: #f2f4f8;
+  background: #f4f6fb;
+  color: #1f2937;
 }
 
-.center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.card {
-  background: white;
-  padding: 25px;
-  width: 300px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #ccc;
-}
-
-input, button {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-}
-
-button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.title {
-  text-align: center;
-  margin: 20px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 200px);
-  gap: 20px;
-  justify-content: center;
-}
-
-.box {
-  background: white;
-  padding: 30px;
-  text-align: center;
-  border-radius: 10px;
-  text-decoration: none;
-  color: black;
-  box-shadow: 0 0 10px #ccc;
-}
-
-table {
-  width: 80%;
-  margin: auto;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 10px;
-  border: 1px solid #ccc;
-}
-a {
-  color: red;
-  text-decoration: none;
-  font-weight: bold;
-}
-/* ===== NAVBAR ===== */
+/* ===== STEP 2: NAVBAR ===== */
 .navbar {
   background: #2563eb;
   padding: 15px 30px;
@@ -89,12 +32,126 @@ a {
   gap: 20px;
 }
 
-.nav-links li a {
+.nav-links a {
   color: white;
   text-decoration: none;
   font-weight: bold;
 }
 
-.nav-links li a:hover {
+.nav-links a:hover {
   text-decoration: underline;
 }
+
+
+/* ===== STEP 3: PAGE TITLE ===== */
+.title {
+  text-align: center;
+  margin: 25px 0;
+  font-size: 26px;
+}
+
+
+/* ===== STEP 4: CENTER LAYOUT ===== */
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+}
+
+
+/* ===== STEP 5: CARD ===== */
+.card {
+  background: white;
+  padding: 25px;
+  width: 320px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+
+/* ===== STEP 6: FORM ELEMENTS ===== */
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+
+/* ===== STEP 7: DASHBOARD ===== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 25px;
+  padding: 0 40px;
+}
+
+.box {
+  background: white;
+  padding: 35px;
+  border-radius: 15px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #1f2937;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+
+/* ===== STEP 8: TABLE ===== */
+table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+th {
+  background: #2563eb;
+  color: white;
+  padding: 14px;
+}
+
+td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+  background: #f1f5ff;
+}
+
+
+/* ===== STEP 9: ACTION LINKS ===== */
+a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+
