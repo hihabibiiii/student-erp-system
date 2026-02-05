@@ -6,12 +6,26 @@
 </head>
 <body>
   {% include "navbar.html" %}
-<h1 class="title">Student Management System</h1>
+
+<h1 class="title">Dashboard</h1>
 
 <div class="grid">
-  <a href="/add-student" class="box">➕ Add Student</a>
-  <a href="/students" class="box">📋 View Students</a>
+  <div class="box">
+    👨‍🎓 Total Students<br>
+    <b>{{ total_students }}</b>
+  </div>
+
+  <div class="box">
+    💰 Total Collected<br>
+    <b>₹ {{ total_paid }}</b>
+  </div>
+
+  <div class="box">
+    ❌ Total Due<br>
+    <b>₹ {{ total_due }}</b>
+  </div>
 </div>
+
 
 </body>
 </html>

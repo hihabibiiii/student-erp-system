@@ -83,7 +83,46 @@ def login():
 def dashboard():
     if "admin" not in session:
         return redirect(url_for("login"))
-    return render_template("dashboard.html")
+
+    conn = get_db()
+
+    total_students = conn.execute(
+        "SELECT COUNT(*) FROM students"
+    ).fetchone()[0]
+
+    total_fee = conn.execute(
+        "SELECT SUM(total_fee) FROM students"
+    ).fetchone()[0] or 0
+
+    total_paid = conn.execute(
+        "SELECT SUM(paid_fee) FROM students"
+    ).fetchone()[0] or 0
+
+    total_due = total_fee - total_paid
+
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        total_students=total_students,
+        total_paid=total_paid,
+        total_due=total_due
+    )
+
+
+@app.route("/receipt/<int:id>")
+def receipt(id):
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    student = conn.execute(
+        "SELECT * FROM students WHERE id=?",
+        (id,)
+    ).fetchone()
+    conn.close()
+
+    return render_template("receipt.html", student=student)
 
 
 @app.route("/logout")
