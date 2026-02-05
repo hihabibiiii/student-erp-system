@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from datetime import date
+
 import sqlite3
 
 CLASSES = [
@@ -275,9 +277,6 @@ def pay_fee(id):
     return render_template("pay_fee.html", student=student)
 
 
-
-from datetime import date
-
 @app.route("/pay-monthly-fee/<int:id>", methods=["GET", "POST"])
 def pay_monthly_fee(id):
     if "admin" not in session:
@@ -290,28 +289,38 @@ def pay_monthly_fee(id):
         (id,)
     ).fetchone()
 
+    error = None
+
     if request.method == "POST":
         amount = int(request.form["amount"])
         month = request.form["month"]
 
-        # insert payment history
-        conn.execute("""
-            INSERT INTO fee_payments (student_id, amount, month, pay_date)
-            VALUES (?, ?, ?, ?)
-        """, (id, amount, month, str(date.today())))
+        # 🔒 DUPLICATE MONTH CHECK
+        existing = conn.execute("""
+            SELECT * FROM fee_payments
+            WHERE student_id=? AND month=?
+        """, (id, month)).fetchone()
 
-        # update paid_fee in students table
-        new_paid = student["paid_fee"] + amount
-        conn.execute(
-            "UPDATE students SET paid_fee=? WHERE id=?",
-            (new_paid, id)
-        )
+        if existing:
+            error = f"Fee for {month} already paid!"
+        else:
+            # insert payment
+            conn.execute("""
+                INSERT INTO fee_payments (student_id, amount, month, pay_date)
+                VALUES (?, ?, ?, ?)
+            """, (id, amount, month, str(date.today())))
 
-        conn.commit()
-        conn.close()
-        return redirect(url_for("students"))
+            # update paid_fee
+            new_paid = student["paid_fee"] + amount
+            conn.execute(
+                "UPDATE students SET paid_fee=? WHERE id=?",
+                (new_paid, id)
+            )
 
-    # payment history
+            conn.commit()
+            conn.close()
+            return redirect(url_for("students"))
+
     payments = conn.execute(
         "SELECT * FROM fee_payments WHERE student_id=?",
         (id,)
@@ -322,8 +331,28 @@ def pay_monthly_fee(id):
     return render_template(
         "monthly_fee.html",
         student=student,
-        payments=payments
+        payments=payments,
+        error=error
     )
+
+@app.route("/monthly-receipt/<int:payment_id>")
+def monthly_receipt(payment_id):
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+
+    payment = conn.execute("""
+        SELECT fp.*, s.name, s.class_name, s.roll
+        FROM fee_payments fp
+        JOIN students s ON fp.student_id = s.id
+        WHERE fp.id=?
+    """, (payment_id,)).fetchone()
+
+    conn.close()
+
+    return render_template("monthly_receipt.html", payment=payment)
+
 
 
 

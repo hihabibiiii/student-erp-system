@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monthly Fee Receipt</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .receipt {
+      max-width: 450px;
+      margin: auto;
+      padding: 30px;
+      border: 1px dashed #333;
+      background: white;
+    }
+    .receipt h2 {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="receipt">
+  <h2>Monthly Fee Receipt</h2>
+  <hr>
+
+  <p><b>Name:</b> {{ payment.name }}</p>
+  <p><b>Class:</b> {{ payment.class_name }}</p>
+  <p><b>Roll:</b> {{ payment.roll }}</p>
+
+  <hr>
+
+  <p><b>Month:</b> {{ payment.month }}</p>
+  <p><b>Amount Paid:</b> ₹ {{ payment.amount }}</p>
+  <p><b>Date:</b> {{ payment.pay_date }}</p>
+
+  <hr>
+
+  <div style="text-align:center;">
+    <button onclick="window.print()">🖨 Print / Save PDF</button>
+  </div>
+</div>
+
+</body>
+</html>

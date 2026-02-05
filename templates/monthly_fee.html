@@ -12,6 +12,10 @@
   <div class="card" style="width:420px;">
     <h2>Monthly Fee</h2>
 
+    {% if error %}
+      <p style="color:red; font-weight:bold;">{{ error }}</p>
+    {% endif %}
+
     <p><b>Name:</b> {{ student.name }}</p>
     <p><b>Total Fee:</b> ₹ {{ student.total_fee }}</p>
     <p><b>Paid:</b> ₹ {{ student.paid_fee }}</p>
@@ -28,14 +32,16 @@
     <h3>Payment History</h3>
 
     {% for p in payments %}
-      <p>
-        📅 {{ p.month }} |
-        ₹ {{ p.amount }} |
-        {{ p.pay_date }}
-      </p>
-    {% else %}
-      <p>No payments yet</p>
-    {% endfor %}
+  <p>
+    📅 {{ p.month }} |
+    ₹ {{ p.amount }} |
+    {{ p.pay_date }} |
+    <a href="/monthly-receipt/{{ p.id }}" target="_blank">🧾 Receipt</a>
+  </p>
+{% else %}
+  <p>No payments yet</p>
+{% endfor %}
+
 
   </div>
 </div>
