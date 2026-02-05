@@ -105,6 +105,103 @@ def logout():
     session.pop("admin", None)
     return redirect(url_for("login"))
 
+
+@app.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    error = None
+    success = None
+
+    if request.method == "POST":
+        old_password = request.form["old_password"]
+        new_password = request.form["new_password"]
+        confirm_password = request.form["confirm_password"]
+
+        conn = get_db()
+        admin = conn.execute(
+            "SELECT * FROM admin WHERE username=?",
+            (session["admin"],)
+        ).fetchone()
+
+        # OLD PASSWORD CHECK
+        if not check_password_hash(admin["password"], old_password):
+            error = "Old password is incorrect"
+
+        elif new_password != confirm_password:
+            error = "New passwords do not match"
+
+        elif len(new_password) < 4:
+            error = "Password must be at least 4 characters"
+
+        else:
+            hashed = generate_password_hash(new_password)
+            conn.execute(
+                "UPDATE admin SET password=? WHERE username=?",
+                (hashed, session["admin"])
+            )
+            conn.commit()
+            success = "Password updated successfully"
+
+        conn.close()
+
+    return render_template(
+        "change_password.html",
+        error=error,
+        success=success
+    )
+
+@app.route("/change-username", methods=["GET", "POST"])
+@login_required
+def change_username():
+    error = None
+    success = None
+
+    if request.method == "POST":
+        new_username = request.form["new_username"].strip()
+        password = request.form["password"]
+
+        conn = get_db()
+
+        # current admin
+        admin = conn.execute(
+            "SELECT * FROM admin WHERE username=?",
+            (session["admin"],)
+        ).fetchone()
+
+        # password verify
+        if not check_password_hash(admin["password"], password):
+            error = "Password is incorrect"
+
+        elif not new_username:
+            error = "Username cannot be empty"
+
+        else:
+            # check duplicate username
+            exists = conn.execute(
+                "SELECT * FROM admin WHERE username=?",
+                (new_username,)
+            ).fetchone()
+
+            if exists:
+                error = "Username already exists"
+            else:
+                conn.execute(
+                    "UPDATE admin SET username=? WHERE id=?",
+                    (new_username, admin["id"])
+                )
+                conn.commit()
+                session["admin"] = new_username
+                success = "Username updated successfully"
+
+        conn.close()
+
+    return render_template(
+        "change_username.html",
+        error=error,
+        success=success
+    )
+
+
 @app.route("/dashboard")
 @login_required
 def dashboard():

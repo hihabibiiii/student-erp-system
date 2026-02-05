@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Change Username</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "navbar.html" %}
+
+<div class="center">
+  <div class="card">
+    <h2>Change Username</h2>
+
+    {% if error %}
+      <p style="color:red;font-weight:bold;">{{ error }}</p>
+    {% endif %}
+
+    {% if success %}
+      <p style="color:green;font-weight:bold;">{{ success }}</p>
+    {% endif %}
+
+    <form method="POST">
+      <input type="text"
+             name="new_username"
+             placeholder="New Username"
+             required>
+
+      <input type="password"
+             name="password"
+             placeholder="Current Password"
+             required>
+
+      <button type="submit">Update Username</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
