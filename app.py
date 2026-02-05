@@ -1,24 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import date
-
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+from functools import wraps
 
-CLASSES = [
-    "1st", "2nd", "3rd", "4th", "5th",
-    "6th", "7th", "8th", "9th", "10th"
-]
+# ---------------- CONFIG DATA ----------------
+CLASSES = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th","BA I", "BA II", "BA III", "BA IV"]
 
-MONTHS = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-]
-
+MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
 app = Flask(__name__)
-app.secret_key = "secret123"   # session key
+app.secret_key = "secret123"
 
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax"
+)
 
-# ---------- DATABASE ----------
+# ---------------- DATABASE ----------------
 def get_db():
     conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
@@ -27,20 +26,6 @@ def get_db():
 def init_db():
     conn = get_db()
 
-
-    conn.execute("""
-    CREATE TABLE IF NOT EXISTS fee_payments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id INTEGER,
-        amount INTEGER,
-        month TEXT,
-        pay_date TEXT,
-        FOREIGN KEY(student_id) REFERENCES students(id)
-    )
-""")
-
-    # students table
-    
     conn.execute("""
         CREATE TABLE IF NOT EXISTS students (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +38,16 @@ def init_db():
         )
     """)
 
-    # admin table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS fee_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id INTEGER,
+            amount INTEGER,
+            month TEXT,
+            pay_date TEXT
+        )
+    """)
+
     conn.execute("""
         CREATE TABLE IF NOT EXISTS admin (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,22 +56,30 @@ def init_db():
         )
     """)
 
-    # default admin insert (only once)
     admin = conn.execute("SELECT * FROM admin").fetchone()
     if not admin:
+        hashed = generate_password_hash("1234")
         conn.execute(
             "INSERT INTO admin (username, password) VALUES (?, ?)",
-            ("admin", "1234")
+            ("admin", hashed)
         )
 
     conn.commit()
     conn.close()
 
-
 init_db()
 
-# ---------- ROUTES ----------
-@app.route("/", methods=["GET", "POST"])
+# ---------------- SECURITY ----------------
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "admin" not in session:
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+# ---------------- ROUTES ----------------
+@app.route("/", methods=["GET","POST"])
 def login():
     if request.method == "POST":
         username = request.form["username"]
@@ -85,41 +87,32 @@ def login():
 
         conn = get_db()
         admin = conn.execute(
-            "SELECT * FROM admin WHERE username=? AND password=?",
-            (username, password)
+            "SELECT * FROM admin WHERE username=?",
+            (username,)
         ).fetchone()
         conn.close()
 
-        if admin:
+        if admin and check_password_hash(admin["password"], password):
             session["admin"] = username
             return redirect(url_for("dashboard"))
-        else:
-            return render_template("login.html", error="Invalid credentials")
+
+        return render_template("login.html", error="Invalid credentials")
 
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    session.pop("admin", None)
+    return redirect(url_for("login"))
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
     conn = get_db()
-
-    total_students = conn.execute(
-        "SELECT COUNT(*) FROM students"
-    ).fetchone()[0]
-
-    total_fee = conn.execute(
-        "SELECT SUM(total_fee) FROM students"
-    ).fetchone()[0] or 0
-
-    total_paid = conn.execute(
-        "SELECT SUM(paid_fee) FROM students"
-    ).fetchone()[0] or 0
-
+    total_students = conn.execute("SELECT COUNT(*) FROM students").fetchone()[0]
+    total_fee = conn.execute("SELECT SUM(total_fee) FROM students").fetchone()[0] or 0
+    total_paid = conn.execute("SELECT SUM(paid_fee) FROM students").fetchone()[0] or 0
     total_due = total_fee - total_paid
-
     conn.close()
 
     return render_template(
@@ -129,33 +122,9 @@ def dashboard():
         total_due=total_due
     )
 
-
-@app.route("/receipt/<int:id>")
-def receipt(id):
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
-    conn = get_db()
-    student = conn.execute(
-        "SELECT * FROM students WHERE id=?",
-        (id,)
-    ).fetchone()
-    conn.close()
-
-    return render_template("receipt.html", student=student)
-
-
-@app.route("/logout")
-def logout():
-    session.pop("admin", None)
-    return redirect(url_for("login"))
-
-
-@app.route("/add-student", methods=["GET", "POST"])
+@app.route("/add-student", methods=["GET","POST"])
+@login_required
 def add_student():
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
     if request.method == "POST":
         name = request.form["name"]
         roll = request.form["roll"]
@@ -164,13 +133,19 @@ def add_student():
         total_fee = int(request.form["total_fee"])
         paid_fee = int(request.form["paid_fee"])
 
+        if total_fee < 0 or paid_fee < 0 or paid_fee > total_fee:
+            return render_template(
+                "add_student.html",
+                classes=CLASSES,
+                error="Invalid fee amount"
+            )
+
         conn = get_db()
         conn.execute("""
             INSERT INTO students
             (name, roll, class_name, phone, total_fee, paid_fee)
             VALUES (?, ?, ?, ?, ?, ?)
         """, (name, roll, class_name, phone, total_fee, paid_fee))
-
         conn.commit()
         conn.close()
 
@@ -178,19 +153,15 @@ def add_student():
 
     return render_template("add_student.html", classes=CLASSES)
 
-
 @app.route("/students")
+@login_required
 def students():
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
     selected_class = request.args.get("class")
-
     conn = get_db()
 
     if selected_class and selected_class != "all":
         students = conn.execute(
-            "SELECT * FROM students WHERE class_name = ?",
+            "SELECT * FROM students WHERE class_name=?",
             (selected_class,)
         ).fetchall()
     else:
@@ -205,16 +176,17 @@ def students():
         selected_class=selected_class
     )
 
-
 @app.route("/delete-student/<int:id>")
+@login_required
 def delete_student(id):
     conn = get_db()
-    conn.execute("DELETE FROM students WHERE id = ?", (id,))
+    conn.execute("DELETE FROM students WHERE id=?", (id,))
     conn.commit()
     conn.close()
     return redirect(url_for("students"))
 
-@app.route("/edit-student/<int:id>", methods=["GET", "POST"])
+@app.route("/edit-student/<int:id>", methods=["GET","POST"])
+@login_required
 def edit_student(id):
     conn = get_db()
 
@@ -237,7 +209,8 @@ def edit_student(id):
         return redirect(url_for("students"))
 
     student = conn.execute(
-        "SELECT * FROM students WHERE id = ?", (id,)
+        "SELECT * FROM students WHERE id=?",
+        (id,)
     ).fetchone()
     conn.close()
 
@@ -246,50 +219,54 @@ def edit_student(id):
         student=student,
         classes=CLASSES
     )
-
-@app.route("/pay-fee/<int:id>", methods=["GET", "POST"])
+@app.route("/pay-fee/<int:id>", methods=["GET","POST"])
+@login_required
 def pay_fee(id):
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
     conn = get_db()
-
-    if request.method == "POST":
-        amount = int(request.form["amount"])
-
-        # current paid fee
-        student = conn.execute(
-            "SELECT paid_fee FROM students WHERE id=?",
-            (id,)
-        ).fetchone()
-
-        new_paid = student["paid_fee"] + amount
-
-        conn.execute(
-            "UPDATE students SET paid_fee=? WHERE id=?",
-            (new_paid, id)
-        )
-
-        conn.commit()
-        conn.close()
-        return redirect(url_for("students"))
 
     student = conn.execute(
         "SELECT * FROM students WHERE id=?",
         (id,)
     ).fetchone()
 
+    if not student:
+        conn.close()
+        return redirect(url_for("students"))
+
+    error = None
+    remaining = student["total_fee"] - student["paid_fee"]
+
+    if request.method == "POST":
+        amount = int(request.form["amount"])
+
+        # ❌ INVALID PAYMENT BLOCK
+        if amount <= 0 or amount > remaining:
+            error = "Invalid payment amount"
+        else:
+            new_paid = student["paid_fee"] + amount
+
+            conn.execute(
+                "UPDATE students SET paid_fee=? WHERE id=?",
+                (new_paid, id)
+            )
+
+            conn.commit()
+            conn.close()
+            return redirect(url_for("students"))
+
     conn.close()
-    return render_template("pay_fee.html", student=student)
+    return render_template(
+        "pay_fee.html",
+        student=student,
+        remaining=remaining,
+        error=error
+    )
 
 
-@app.route("/pay-monthly-fee/<int:id>", methods=["GET", "POST"])
+@app.route("/pay-monthly-fee/<int:id>", methods=["GET","POST"])
+@login_required
 def pay_monthly_fee(id):
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
     conn = get_db()
-
     student = conn.execute(
         "SELECT * FROM students WHERE id=?",
         (id,)
@@ -301,69 +278,81 @@ def pay_monthly_fee(id):
         amount = int(request.form["amount"])
         month = request.form["month"]
 
-        # 🔒 DUPLICATE MONTH CHECK
-        existing = conn.execute("""
-            SELECT * FROM fee_payments
-            WHERE student_id=? AND month=?
-        """, (id, month)).fetchone()
+        remaining = student["total_fee"] - student["paid_fee"]
 
-        if existing:
-            error = f"Fee for {month} already paid!"
+        if amount <= 0 or amount > remaining:
+            error = "Invalid payment amount"
         else:
-            # insert payment
-            conn.execute("""
-                INSERT INTO fee_payments (student_id, amount, month, pay_date)
-                VALUES (?, ?, ?, ?)
-            """, (id, amount, month, str(date.today())))
+            existing = conn.execute("""
+                SELECT * FROM fee_payments
+                WHERE student_id=? AND month=?
+            """, (id, month)).fetchone()
 
-            # update paid_fee
-            new_paid = student["paid_fee"] + amount
-            conn.execute(
-                "UPDATE students SET paid_fee=? WHERE id=?",
-                (new_paid, id)
-            )
+            if existing:
+                error = f"Fee for {month} already paid!"
+            else:
+                conn.execute("""
+                    INSERT INTO fee_payments
+                    (student_id, amount, month, pay_date)
+                    VALUES (?, ?, ?, ?)
+                """, (id, amount, month, str(date.today())))
 
-            conn.commit()
-            conn.close()
-            return redirect(url_for("students"))
+                conn.execute(
+                    "UPDATE students SET paid_fee=? WHERE id=?",
+                    (student["paid_fee"] + amount, id)
+                )
+
+                conn.commit()
+                conn.close()
+                return redirect(url_for("students"))
 
     payments = conn.execute(
         "SELECT * FROM fee_payments WHERE student_id=?",
         (id,)
     ).fetchall()
-
     conn.close()
 
     return render_template(
-    "monthly_fee.html",
-    student=student,
-    payments=payments,
-    error=error,
-    months=MONTHS
-)
-
+        "monthly_fee.html",
+        student=student,
+        payments=payments,
+        error=error,
+        months=MONTHS
+    )
 
 @app.route("/monthly-receipt/<int:payment_id>")
+@login_required
 def monthly_receipt(payment_id):
-    if "admin" not in session:
-        return redirect(url_for("login"))
-
     conn = get_db()
-
     payment = conn.execute("""
         SELECT fp.*, s.name, s.class_name, s.roll
         FROM fee_payments fp
         JOIN students s ON fp.student_id = s.id
         WHERE fp.id=?
     """, (payment_id,)).fetchone()
-
     conn.close()
 
     return render_template("monthly_receipt.html", payment=payment)
 
+@app.route("/receipt/<int:id>")
+@login_required
+def receipt(id):
+    conn = get_db()
+
+    student = conn.execute(
+        "SELECT * FROM students WHERE id=?",
+        (id,)
+    ).fetchone()
+
+    conn.close()
+
+    if not student:
+        return "Student not found", 404
+
+    return render_template("receipt.html", student=student)
 
 
 
-# ---------- RUN ----------
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)

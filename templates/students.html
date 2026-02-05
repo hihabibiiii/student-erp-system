@@ -5,14 +5,16 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  {% include "navbar.html" %}
+
+{% include "navbar.html" %}
+
 <h2 class="title">Student List</h2>
+
+<!-- CLASS FILTER -->
 <form method="GET" style="text-align:center; margin-bottom:20px;">
   <label><b>Select Class:</b></label>
-
   <select name="class" onchange="this.form.submit()">
     <option value="all">All Classes</option>
-
     {% for c in classes %}
       <option value="{{ c }}"
         {% if selected_class == c %}selected{% endif %}>
@@ -22,7 +24,6 @@
   </select>
 </form>
 
-
 <table>
   <tr>
     <th>ID</th>
@@ -30,12 +31,11 @@
     <th>Roll</th>
     <th>Class</th>
     <th>Phone</th>
-    <th>Action</th>
     <th>Total Fee</th>
-<th>Paid</th>
-<th>Due</th>
-<th>Status</th>
-
+    <th>Paid</th>
+    <th>Due</th>
+    <th>Status</th>
+    <th>Action</th>
   </tr>
 
   {% for s in students %}
@@ -45,31 +45,33 @@
     <td>{{ s.roll }}</td>
     <td>{{ s.class_name }}</td>
     <td>{{ s.phone }}</td>
-    <td>{{ s.total_fee }}</td>
-<td>{{ s.paid_fee }}</td>
-<td>{{ s.total_fee - s.paid_fee }}</td>
-<td>
-  {% if s.paid_fee >= s.total_fee %}
-    <span style="color:green;font-weight:bold;">Paid</span>
-  {% else %}
-    <span style="color:red;font-weight:bold;">Due</span>
-  {% endif %}
-</td>
 
+    <td>{{ s.total_fee }}</td>
+    <td>{{ s.paid_fee }}</td>
+    <td>₹ {{ s.total_fee - s.paid_fee }}</td>
+
+    <td>
+      {% if s.paid_fee >= s.total_fee %}
+        <span style="color:green; font-weight:bold;">Paid</span>
+      {% else %}
+        <span style="color:red; font-weight:bold;">Due</span>
+      {% endif %}
+    </td>
+
+    <!-- ACTION COLUMN (LAST) -->
     <td>
       <a href="/edit-student/{{ s.id }}">✏️ Edit</a> |
       <a href="/pay-monthly-fee/{{ s.id }}">📅 Monthly Fee</a> |
       <a href="/receipt/{{ s.id }}" target="_blank">🧾 Receipt</a> |
       {% if s.paid_fee < s.total_fee %}
-    <a href="/pay-fee/{{ s.id }}" style="color:green;">💸 Pay Due</a> |
-  {% endif %}
+        <a href="/pay-fee/{{ s.id }}" style="color:green;">💸 Pay Due</a> |
+      {% endif %}
       <a href="/delete-student/{{ s.id }}"
          onclick="return confirm('Are you sure?')">❌ Delete</a>
     </td>
   </tr>
   {% endfor %}
 </table>
-
 
 </body>
 </html>
