@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Students</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h2 class="title">Student List</h2>
+
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Roll</th>
+    <th>Class</th>
+    <th>Phone</th>
+    <th>Action</th>
+  </tr>
+
+  {% for s in students %}
+  <tr>
+    <td>{{ s.id }}</td>
+    <td>{{ s.name }}</td>
+    <td>{{ s.roll }}</td>
+    <td>{{ s.class_name }}</td>
+    <td>{{ s.phone }}</td>
+    <td>
+      <a href="/delete-student/{{ s.id }}"
+         onclick="return confirm('Are you sure?')">
+         ❌ Delete
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+</body>
+</html>
