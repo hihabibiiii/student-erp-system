@@ -19,6 +19,18 @@ def get_db():
 def init_db():
     conn = get_db()
 
+
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS fee_payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER,
+        amount INTEGER,
+        month TEXT,
+        pay_date TEXT,
+        FOREIGN KEY(student_id) REFERENCES students(id)
+    )
+""")
+
     # students table
     
     conn.execute("""
@@ -261,6 +273,59 @@ def pay_fee(id):
 
     conn.close()
     return render_template("pay_fee.html", student=student)
+
+
+
+from datetime import date
+
+@app.route("/pay-monthly-fee/<int:id>", methods=["GET", "POST"])
+def pay_monthly_fee(id):
+    if "admin" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+
+    student = conn.execute(
+        "SELECT * FROM students WHERE id=?",
+        (id,)
+    ).fetchone()
+
+    if request.method == "POST":
+        amount = int(request.form["amount"])
+        month = request.form["month"]
+
+        # insert payment history
+        conn.execute("""
+            INSERT INTO fee_payments (student_id, amount, month, pay_date)
+            VALUES (?, ?, ?, ?)
+        """, (id, amount, month, str(date.today())))
+
+        # update paid_fee in students table
+        new_paid = student["paid_fee"] + amount
+        conn.execute(
+            "UPDATE students SET paid_fee=? WHERE id=?",
+            (new_paid, id)
+        )
+
+        conn.commit()
+        conn.close()
+        return redirect(url_for("students"))
+
+    # payment history
+    payments = conn.execute(
+        "SELECT * FROM fee_payments WHERE student_id=?",
+        (id,)
+    ).fetchall()
+
+    conn.close()
+
+    return render_template(
+        "monthly_fee.html",
+        student=student,
+        payments=payments
+    )
+
+
 
 # ---------- RUN ----------
 if __name__ == "__main__":

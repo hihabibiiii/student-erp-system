@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monthly Fee</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "navbar.html" %}
+
+<div class="center">
+  <div class="card" style="width:420px;">
+    <h2>Monthly Fee</h2>
+
+    <p><b>Name:</b> {{ student.name }}</p>
+    <p><b>Total Fee:</b> ₹ {{ student.total_fee }}</p>
+    <p><b>Paid:</b> ₹ {{ student.paid_fee }}</p>
+    <p><b>Due:</b> ₹ {{ student.total_fee - student.paid_fee }}</p>
+
+    <form method="POST">
+      <input type="text" name="month" placeholder="Month (e.g. Jan 2026)" required>
+      <input type="number" name="amount" placeholder="Amount Paid" required>
+      <button type="submit">Pay Fee</button>
+    </form>
+
+    <hr>
+
+    <h3>Payment History</h3>
+
+    {% for p in payments %}
+      <p>
+        📅 {{ p.month }} |
+        ₹ {{ p.amount }} |
+        {{ p.pay_date }}
+      </p>
+    {% else %}
+      <p>No payments yet</p>
+    {% endfor %}
+
+  </div>
+</div>
+
+</body>
+</html>
