@@ -8,6 +8,12 @@ CLASSES = [
     "6th", "7th", "8th", "9th", "10th"
 ]
 
+MONTHS = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
+
+
 app = Flask(__name__)
 app.secret_key = "secret123"   # session key
 
@@ -329,11 +335,13 @@ def pay_monthly_fee(id):
     conn.close()
 
     return render_template(
-        "monthly_fee.html",
-        student=student,
-        payments=payments,
-        error=error
-    )
+    "monthly_fee.html",
+    student=student,
+    payments=payments,
+    error=error,
+    months=MONTHS
+)
+
 
 @app.route("/monthly-receipt/<int:payment_id>")
 def monthly_receipt(payment_id):
