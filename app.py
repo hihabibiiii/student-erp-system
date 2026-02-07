@@ -3,6 +3,13 @@ from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from functools import wraps
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
 
 # ---------------- CONFIG DATA ----------------
 CLASSES = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th","BA I", "BA II", "BA III", "BA IV"]
@@ -10,7 +17,9 @@ CLASSES = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","
 MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError("FLASK_SECRET_KEY not set in .env")
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -18,8 +27,10 @@ app.config.update(
 )
 
 # ---------------- DATABASE ----------------
+DB_PATH = os.getenv("DB_PATH", "database.db")
+
 def get_db():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -67,13 +78,21 @@ def init_db():
     # ---------- DEFAULT ADMIN ----------
     admin = conn.execute("SELECT * FROM admin").fetchone()
     if not admin:
-        hashed_pass = generate_password_hash("1234")
-        hashed_ans = generate_password_hash("petname")
+        ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+        ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+        ADMIN_SECURITY_ANSWER = os.getenv("ADMIN_SECURITY_ANSWER")
+
+        if not ADMIN_USERNAME or not ADMIN_PASSWORD or not ADMIN_SECURITY_ANSWER:
+            raise RuntimeError("Admin credentials missing in .env file")
+
+        hashed_pass = generate_password_hash(ADMIN_PASSWORD)
+        hashed_ans  = generate_password_hash(ADMIN_SECURITY_ANSWER)
 
         conn.execute(
             "INSERT INTO admin (username, password, security_answer) VALUES (?, ?, ?)",
-            ("admin", hashed_pass, hashed_ans)
+            (ADMIN_USERNAME, hashed_pass, hashed_ans)
         )
+
 
     conn.commit()
     conn.close()
@@ -548,4 +567,6 @@ def receipt(id):
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(debug=DEBUG)
+

@@ -59,19 +59,65 @@
     </td>
 
     <!-- ACTION COLUMN (LAST) -->
-    <td>
-      <a href="/edit-student/{{ s.id }}">✏️ Edit</a> |
-      <a href="/pay-monthly-fee/{{ s.id }}">📅 Monthly Fee</a> |
-      <a href="/receipt/{{ s.id }}" target="_blank">🧾 Receipt</a> |
-      {% if s.paid_fee < s.total_fee %}
-        <a href="/pay-fee/{{ s.id }}" style="color:green;">💸 Pay Due</a> |
-      {% endif %}
-      <a href="/delete-student/{{ s.id }}"
-         onclick="return confirm('Are you sure?')">❌ Delete</a>
-    </td>
+   <td class="action-cell">
+  <button class="action-btn"
+          type="button"
+          onclick="openActionMenu(this)">
+    ⚙ Action
+  </button>
+
+  <!-- hidden template -->
+  <div class="action-template" style="display:none;">
+    <a href="/edit-student/{{ s.id }}">✏️ Edit</a>
+    <a href="/pay-monthly-fee/{{ s.id }}">📅 Monthly Fee</a>
+    <a href="/receipt/{{ s.id }}" target="_blank">🧾 Receipt</a>
+
+    {% if s.paid_fee < s.total_fee %}
+      <a href="/pay-fee/{{ s.id }}" class="pay">💸 Pay Due</a>
+    {% endif %}
+
+    <a href="/delete-student/{{ s.id }}"
+       class="delete"
+       onclick="return confirm('Are you sure?')">❌ Delete</a>
+  </div>
+</td>
+
+
+
   </tr>
   {% endfor %}
 </table>
+<script>
+  let currentMenu = null;
 
+function openActionMenu(btn) {
+  // close old
+  if (currentMenu) {
+    currentMenu.remove();
+    currentMenu = null;
+  }
+
+  const template = btn.nextElementSibling;
+  const menu = document.createElement("div");
+  menu.className = "floating-menu";
+  menu.innerHTML = template.innerHTML;
+
+  document.body.appendChild(menu);
+
+  const rect = btn.getBoundingClientRect();
+  menu.style.top = rect.bottom + window.scrollY + 6 + "px";
+  menu.style.left = rect.right + window.scrollX - menu.offsetWidth + "px";
+
+  currentMenu = menu;
+}
+
+// close on outside click
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".action-btn") && currentMenu) {
+    currentMenu.remove();
+    currentMenu = null;
+  }
+});
+</script>
 </body>
 </html>
