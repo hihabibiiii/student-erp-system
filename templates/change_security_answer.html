@@ -1,45 +1,24 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Change Security Answer</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
 <body>
-
-{% include "navbar.html" %}
-
-<div class="center">
-  <div class="card">
-    <h2>Change Security Answer</h2>
-
-    {% if error %}
-      <p style="color:red; font-weight:bold;">{{ error }}</p>
-    {% endif %}
-
-    {% if success %}
-      <p style="color:green; font-weight:bold;">{{ success }}</p>
-    {% endif %}
-
-    <form method="POST">
-      <input type="password"
-             name="old_answer"
-             placeholder="Old Security Answer"
-             required>
-
-      <input type="password"
-             name="new_answer"
-             placeholder="New Security Answer"
-             required>
-
-      <input type="password"
-             name="confirm_answer"
-             placeholder="Confirm New Security Answer"
-             required>
-
-      <button type="submit">Update Security Answer</button>
-    </form>
-  </div>
-</div>
-
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "admin-panel",
+      title: "Admin Panel",
+      props: {
+        mode: "security",
+        error: {{ error|default(None)|tojson }},
+        success: {{ success|default(None)|tojson }}
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>

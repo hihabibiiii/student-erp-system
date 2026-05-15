@@ -1,123 +1,36 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Students</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
 <body>
-
-{% include "navbar.html" %}
-
-<h2 class="title">Student List</h2>
-
-<!-- CLASS FILTER -->
-<form method="GET" style="text-align:center; margin-bottom:20px;">
-  <label><b>Select Class:</b></label>
-  <select name="class" onchange="this.form.submit()">
-    <option value="all">All Classes</option>
-    {% for c in classes %}
-      <option value="{{ c }}"
-        {% if selected_class == c %}selected{% endif %}>
-        {{ c }}
-      </option>
-    {% endfor %}
-  </select>
-</form>
-
-<table>
-  <tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Roll</th>
-    <th>Class</th>
-    <th>Phone</th>
-    <th>Total Fee</th>
-    <th>Paid</th>
-    <th>Due</th>
-    <th>Status</th>
-    <th>Action</th>
-  </tr>
-
-  {% for s in students %}
-  <tr>
-    <td>{{ s.id }}</td>
-    <td>{{ s.name }}</td>
-    <td>{{ s.roll }}</td>
-    <td>{{ s.class_name }}</td>
-    <td>{{ s.phone }}</td>
-
-    <td>{{ s.total_fee }}</td>
-    <td>{{ s.paid_fee }}</td>
-    <td>₹ {{ s.total_fee - s.paid_fee }}</td>
-
-    <td>
-      {% if s.paid_fee >= s.total_fee %}
-        <span style="color:green; font-weight:bold;">Paid</span>
-      {% else %}
-        <span style="color:red; font-weight:bold;">Due</span>
-      {% endif %}
-    </td>
-
-    <!-- ACTION COLUMN (LAST) -->
-   <td class="action-cell">
-  <button class="action-btn"
-          type="button"
-          onclick="openActionMenu(this)">
-    ⚙ Action
-  </button>
-
-  <!-- hidden template -->
-  <div class="action-template" style="display:none;">
-    <a href="/edit-student/{{ s.id }}">✏️ Edit</a>
-    <a href="/pay-monthly-fee/{{ s.id }}">📅 Monthly Fee</a>
-    <a href="/receipt/{{ s.id }}" target="_blank">🧾 Receipt</a>
-
-    {% if s.paid_fee < s.total_fee %}
-      <a href="/pay-fee/{{ s.id }}" class="pay">💸 Pay Due</a>
-    {% endif %}
-
-    <a href="/delete-student/{{ s.id }}"
-       class="delete"
-       onclick="return confirm('Are you sure?')">❌ Delete</a>
-  </div>
-</td>
-
-
-
-  </tr>
-  {% endfor %}
-</table>
-<script>
-  let currentMenu = null;
-
-function openActionMenu(btn) {
-  // close old
-  if (currentMenu) {
-    currentMenu.remove();
-    currentMenu = null;
-  }
-
-  const template = btn.nextElementSibling;
-  const menu = document.createElement("div");
-  menu.className = "floating-menu";
-  menu.innerHTML = template.innerHTML;
-
-  document.body.appendChild(menu);
-
-  const rect = btn.getBoundingClientRect();
-  menu.style.top = rect.bottom + window.scrollY + 6 + "px";
-  menu.style.left = rect.right + window.scrollX - menu.offsetWidth + "px";
-
-  currentMenu = menu;
-}
-
-// close on outside click
-document.addEventListener("click", function(e) {
-  if (!e.target.closest(".action-btn") && currentMenu) {
-    currentMenu.remove();
-    currentMenu = null;
-  }
-});
-</script>
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "students",
+      title: "Student Management",
+      props: {
+        classes: {{ classes|tojson }},
+        selectedClass: {{ selected_class|default("all")|tojson }},
+        students: [
+          {% for s in students %}
+          {
+            id: {{ s.id|tojson }},
+            name: {{ s.name|tojson }},
+            roll: {{ s.roll|tojson }},
+            class_name: {{ s.class_name|tojson }},
+            phone: {{ s.phone|tojson }},
+            total_fee: {{ s.total_fee|tojson }},
+            paid_fee: {{ s.paid_fee|tojson }}
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>

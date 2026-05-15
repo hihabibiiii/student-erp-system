@@ -1,44 +1,23 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Forgot Username / Password</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Account | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
 <body>
-
-<div class="center">
-  <div class="card">
-    <h2>Reset Account</h2>
-
-    <p><b>Security Question:</b><br>
-       What is your pet name?</p>
-
-    {% if error %}
-      <p style="color:red;font-weight:bold;">{{ error }}</p>
-    {% endif %}
-
-    {% if success %}
-      <p style="color:green;font-weight:bold;">{{ success }}</p>
-    {% endif %}
-
-    <form method="POST">
-      <input type="text" name="answer"
-             placeholder="Security Answer" required>
-
-      <input type="text" name="new_username"
-             placeholder="New Username" required>
-
-      <input type="password" name="new_password"
-             placeholder="New Password" required>
-
-      <button type="submit">Reset</button>
-    </form>
-
-    <p style="text-align:center; margin-top:10px;">
-      <a href="/">Back to Login</a>
-    </p>
-  </div>
-</div>
-
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "forgot",
+      title: "Reset Account",
+      props: {
+        error: {{ error|default(None)|tojson }},
+        success: {{ success|default(None)|tojson }}
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>

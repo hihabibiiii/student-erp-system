@@ -1,55 +1,39 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Monthly Fee</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Fee | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
 <body>
-
-{% include "navbar.html" %}
-
-<div class="center">
-  <div class="card" style="width:420px;">
-    <h2>Monthly Fee</h2>
-
-    {% if error %}
-      <p style="color:red; font-weight:bold;">{{ error }}</p>
-    {% endif %}
-
-    <p><b>Name:</b> {{ student.name }}</p>
-    <p><b>Total Fee:</b> ₹ {{ student.total_fee }}</p>
-    <p><b>Paid:</b> ₹ {{ student.paid_fee }}</p>
-    <p><b>Due:</b> ₹ {{ student.total_fee - student.paid_fee }}</p>
-
-    <form method="POST">
-<select name="month" required>
-  <option value="">Select Month</option>
-  {% for m in months %}
-    <option value="{{ m }}">{{ m }}</option>
-  {% endfor %}
-</select>
-      <input type="number" name="amount" placeholder="Amount Paid" required>
-      <button type="submit">Pay Fee</button>
-    </form>
-
-    <hr>
-
-    <h3>Payment History</h3>
-
-    {% for p in payments %}
-  <p>
-    📅 {{ p.month }} |
-    ₹ {{ p.amount }} |
-    {{ p.pay_date }} |
-    <a href="/monthly-receipt/{{ p.id }}" target="_blank">🧾 Receipt</a>
-  </p>
-{% else %}
-  <p>No payments yet</p>
-{% endfor %}
-
-
-  </div>
-</div>
-
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "monthly-fee",
+      title: "Monthly Fee",
+      props: {
+        error: {{ error|default(None)|tojson }},
+        months: {{ months|tojson }},
+        student: {
+          id: {{ student.id|tojson }},
+          name: {{ student.name|tojson }},
+          total_fee: {{ student.total_fee|tojson }},
+          paid_fee: {{ student.paid_fee|tojson }}
+        },
+        payments: [
+          {% for p in payments %}
+          {
+            id: {{ p.id|tojson }},
+            amount: {{ p.amount|tojson }},
+            month: {{ p.month|tojson }},
+            pay_date: {{ p.pay_date|tojson }}
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>

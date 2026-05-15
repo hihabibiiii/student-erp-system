@@ -1,48 +1,31 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Edit Student</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Student | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
 <body>
-
-{% include "navbar.html" %}
-
-<div class="center">
-  <div class="card">
-    <h2>Edit Student</h2>
-
-    <form method="POST">
-
-      <input type="text" name="name"
-             value="{{ student.name }}" required>
-
-      <input type="text" name="roll"
-             value="{{ student.roll }}" required>
-
-      <select name="class_name" required>
-        {% for c in classes %}
-          <option value="{{ c }}"
-            {% if c == student.class_name %}selected{% endif %}>
-            {{ c }}
-          </option>
-        {% endfor %}
-      </select>
-
-      <input type="text" name="phone"
-             value="{{ student.phone }}" required>
-
-      <input type="number" name="total_fee"
-             value="{{ student.total_fee }}" required>
-
-      <input type="number" name="paid_fee"
-             value="{{ student.paid_fee }}" required>
-
-      <button type="submit">Update Student</button>
-
-    </form>
-  </div>
-</div>
-
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "edit-student",
+      title: "Edit Student",
+      props: {
+        classes: {{ classes|tojson }},
+        student: {
+          id: {{ student.id|tojson }},
+          name: {{ student.name|tojson }},
+          roll: {{ student.roll|tojson }},
+          class_name: {{ student.class_name|tojson }},
+          phone: {{ student.phone|tojson }},
+          total_fee: {{ student.total_fee|tojson }},
+          paid_fee: {{ student.paid_fee|tojson }}
+        }
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>

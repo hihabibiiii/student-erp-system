@@ -1,31 +1,24 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
 <body>
-  {% include "navbar.html" %}
-
-<h1 class="title">Dashboard</h1>
-
-<div class="grid">
-  <div class="box">
-    👨‍🎓 Total Students<br>
-    <b>{{ total_students }}</b>
-  </div>
-
-  <div class="box">
-    💰 Total Collected<br>
-    <b>₹ {{ total_paid }}</b>
-  </div>
-
-  <div class="box">
-    ❌ Total Due<br>
-    <b>₹ {{ total_due }}</b>
-  </div>
-</div>
-
-
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "dashboard",
+      title: "Dashboard",
+      props: {
+        totalStudents: {{ total_students|tojson }},
+        totalPaid: {{ total_paid|tojson }},
+        totalDue: {{ total_due|tojson }}
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>

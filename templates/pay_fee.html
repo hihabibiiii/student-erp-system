@@ -1,32 +1,29 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Pay Fee</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay Fee | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
 <body>
-
-{% include "navbar.html" %}
-
-<div class="center">
-  <div class="card">
-    <h2>Pay Fee</h2>
-
-    <p><b>Name:</b> {{ student.name }}</p>
-    <p><b>Total Fee:</b> {{ student.total_fee }}</p>
-    <p><b>Paid:</b> {{ student.paid_fee }}</p>
-    <p><b>Due:</b> {{ student.total_fee - student.paid_fee }}</p>
-
-    <form method="POST">
-      <input type="number" name="amount"
-             placeholder="Enter amount to pay"
-             max="{{ student.total_fee - student.paid_fee }}"
-             required>
-
-      <button type="submit">Pay Now</button>
-    </form>
-  </div>
-</div>
-
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "pay-fee",
+      title: "Fees",
+      props: {
+        error: {{ error|default(None)|tojson }},
+        remaining: {{ remaining|tojson }},
+        student: {
+          id: {{ student.id|tojson }},
+          name: {{ student.name|tojson }},
+          total_fee: {{ student.total_fee|tojson }},
+          paid_fee: {{ student.paid_fee|tojson }}
+        }
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>

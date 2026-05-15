@@ -1,61 +1,31 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <title>Fee Receipt</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <style>
-    .receipt {
-      max-width: 500px;
-      margin: auto;
-      padding: 30px;
-      border: 1px dashed #333;
-      background: white;
-    }
-    .receipt h2 {
-      text-align: center;
-    }
-    .receipt p {
-      font-size: 16px;
-      margin: 8px 0;
-    }
-    .print-btn {
-      margin-top: 20px;
-      text-align: center;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fee Receipt | Student ERP</title>
+  <link rel="stylesheet" href="/static/react/app.css">
 </head>
-
 <body>
-
-<div class="receipt">
-  <h2>Fee Receipt</h2>
-  <hr>
-
-  <p><b>Name:</b> {{ student.name }}</p>
-  <p><b>Class:</b> {{ student.class_name }}</p>
-  <p><b>Roll No:</b> {{ student.roll }}</p>
-  <p><b>Phone:</b> {{ student.phone }}</p>
-
-  <hr>
-
-  <p><b>Total Fee:</b> ₹ {{ student.total_fee }}</p>
-  <p><b>Paid:</b> ₹ {{ student.paid_fee }}</p>
-  <p><b>Due:</b> ₹ {{ student.total_fee - student.paid_fee }}</p>
-
-  <hr>
-
-  <p><b>Status:</b>
-    {% if student.paid_fee >= student.total_fee %}
-      PAID
-    {% else %}
-      DUE
-    {% endif %}
-  </p>
-
-  <div class="print-btn">
-    <button onclick="window.print()">🖨 Print / Save PDF</button>
-  </div>
-</div>
-
+  <div id="root"></div>
+  <script>
+    window.__ERP_PAGE__ = {
+      name: "receipt",
+      title: "Fee Receipt",
+      props: {
+        type: "full",
+        student: {
+          id: {{ student.id|tojson }},
+          name: {{ student.name|tojson }},
+          class_name: {{ student.class_name|tojson }},
+          roll: {{ student.roll|tojson }},
+          phone: {{ student.phone|tojson }},
+          total_fee: {{ student.total_fee|tojson }},
+          paid_fee: {{ student.paid_fee|tojson }}
+        }
+      }
+    };
+  </script>
+  <script type="module" src="/static/react/app.js"></script>
 </body>
 </html>
